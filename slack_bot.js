@@ -71,6 +71,7 @@ This bot demonstrates many of the core features of Botkit:
 
 var Botkit = require('./lib/Botkit.js');
 var os = require('os');
+var child_process = require('child_process');
 
 var controller = Botkit.slackbot({
   debug: true,
@@ -81,7 +82,7 @@ var bot = controller.spawn({
 }).startRTM();
 
 // 自分をgitからフェッチして更新
-controller.hears(['update','うｐだて'], 'direct_mention', function(bot, message) {
+controller.hears(['update','うｐだて'], 'direct_message,direct_mention', function(bot, message) {
   bot.reply(message, 'Botのアップデートを開始します');
 
   child_process.exec('git fetch', function(error, stdout, stderr){
