@@ -142,9 +142,10 @@ function updateSelf(bot, message){
 
 controller.hears(['撮影', 'webcam'], 'direct_message,direct_mention,mention', function(bot, message) {
   // var child_process = require('child_process');
-  var fswebcam = 'fswebcam -r 1200x720 --no-banner ~/Pictures/image.jpg; feh ~/Pictures/image.jpg;';
-  var slack = 'curl -F file=@Pictures/image.jpg -F channels=test -F token=xoxp-108876200531-108268499681-118324535607-1e3eae5c773fb77d95e7f0859d77e744 https://slack.com/api/files.upload';
-  child_process.exec(fswebcam + slack, function(error, stdout, stderr){
+  child_process.exec('webcomup', function(error, stdout, stderr){
+    if (error) {
+      bot.reply(message, stderr);
+    }
     bot.reply(message, '完了');
   });
 });
