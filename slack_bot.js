@@ -78,7 +78,7 @@ var controller = Botkit.slackbot({
 });
 
 var bot = controller.spawn({
-  token: 'xoxb-144870618804-dQV3GIzRLY7HpP74QqugzabR'
+  token: 'xoxb-118361056631-7vXHKTxxW9owfJKNQ6gPzeMK'
 }).startRTM();
 
 // 自分をgitからフェッチして更新
@@ -140,8 +140,7 @@ function updateSelf(bot, message){
   });
 }
 
-controller.hears(['撮影', 'webcamup'], 'direct_message,direct_mention,mention', function(bot, message) {
-  // var child_process = require('child_process');
+controller.hears(['撮影', 'webcam'], 'direct_message,direct_mention,mention', function(bot, message) {
   child_process.exec('webcamup', function(error, stdout, stderr){
     if (error) {
       bot.reply(message, stderr);
