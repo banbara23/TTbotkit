@@ -140,12 +140,13 @@ function updateSelf(bot, message){
   });
 }
 
-controller.hears(['撮影', 'webcam'], 'direct_message,direct_mention,mention', function(bot, message) {
-  child_process.exec('webcamup', function(error, stdout, stderr){
+controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
+  //bot.reply(message, '撮影開始');
+  child_process.exec('/home/pi/webcam.sh', function(error, stdout, stderr){
     if (error) {
       bot.reply(message, stderr);
     }
-    bot.reply(message, '完了');
+   // bot.reply(message, '完了');
   });
 });
 
