@@ -72,55 +72,55 @@ This bot demonstrates many of the core features of Botkit:
 var Botkit = require('./lib/Botkit.js');
 var os = require('os');
 var child_process = require('child_process');
+var config = require('./config.json');
 
 var controller = Botkit.slackbot({
   debug: true,
 });
 
 var bot = controller.spawn({
-  token: 'xoxb-118361056631-7vXHKTxxW9owfJKNQ6gPzeMK'
+  token: config.Slack.token
 }).startRTM();
 
 // 自分をgitからフェッチして更新
-controller.hears(['update','うｐだて'], 'direct_message,direct_mention', function(bot, message) {
+controller.hears(['update', 'うｐだて'], 'direct_message,direct_mention', function(bot, message) {
   bot.reply(message, 'Botのアップデートを開始します');
 
-  child_process.exec('git fetch', function(error, stdout, stderr){
-    child_process.exec('git log master..origin/master', function(error, stdout, stderr){
-      if(stdout == ""){
+  child_process.exec('git fetch', function(error, stdout, stderr) {
+    child_process.exec('git log master..origin/master', function(error, stdout, stderr) {
+      if (stdout == "") {
         bot.reply(message, 'Botは最新です');
-      }else{
-        bot.startConversation(message, function(error, convo){
+      } else {
+        bot.startConversation(message, function(error, convo) {
           bot.reply(message, '更新内容は以下のとおりです');
           bot.reply(message, '```\n' + stdout + '\n```');
-          convo.ask('アップデートを行いますか？(y/n)', [
-            {
+          convo.ask('アップデートを行いますか？(y/n)', [{
               pattern: bot.utterances.yes,
-              callback: function(response, convo){
+              callback: function(response, convo) {
                 updateSelf(bot, message);
                 convo.next();
               }
             },
             {
               pattern: bot.utterances.no,
-              callback: function(response, convo){
+              callback: function(response, convo) {
                 bot.reply(message, 'アップデートを中止します');
                 convo.next();
               }
             },
             {
               pattern: 'はい',
-              callback: function(response, convo){
+              callback: function(response, convo) {
                 updateSelf(bot, message);
                 convo.next();
               }
             },
             {
               default: true,
-                callback: function(response, convo){
-                  convo.repeat();
-                  convo.next();
-                }
+              callback: function(response, convo) {
+                convo.repeat();
+                convo.next();
+              }
             }
           ]);
         });
@@ -130,24 +130,30 @@ controller.hears(['update','うｐだて'], 'direct_message,direct_mention', fun
 });
 
 // 自分を更新
-function updateSelf(bot, message){
-  child_process.exec('git reset --hard origin/master', function(error, stdout, stderr){
+function updateSelf(bot, message) {
+  child_process.exec('git reset --hard origin/master', function(error, stdout, stderr) {
     bot.reply(message, 'Botが更新されました！');
     bot.reply(message, 'Botを再起動します');
-    setTimeout(function(){
+    setTimeout(function() {
       process.exit();
     }, 2000);
   });
 }
 
+// 撮影
 controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
   //bot.reply(message, '撮影開始');
-  child_process.exec('/home/pi/webcam.sh', function(error, stdout, stderr){
+  child_process.exec('/home/pi/webcam.sh', function(error, stdout, stderr) {
     if (error) {
       bot.reply(message, stderr);
     }
-   // bot.reply(message, '完了');
+    // bot.reply(message, '完了');
   });
+});
+
+// PiPhotoBooth
+controller.hears(['cheese', 'はいチーズ'], 'ambient', function(bot, message) {
+  // todo: PiPhotoBoothを呼び出す
 });
 
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', function(bot, message) {
