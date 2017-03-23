@@ -142,16 +142,16 @@ function updateSelf(bot, message) {
 
 // 撮影
 controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
-    //bot.reply(message, '撮影開始');
+    bot.reply(message, '撮影開始');
     child_process.exec('fswebcam -r 1920x1080 --no-banner /home/pi/image.jpg', function(error, stdout, stderr) {
         if (error) {
             bot.reply(message, stderr);
         }
-    });
-    child_process.exec('curl -F file=@image.jpg -F channels=test -F token=' + config.Slack.legacy_token + ' https: //slack.com/api/files.upload', function(error, stdout, stderr) {
-        if (error) {
-            bot.reply(message, stderr);
-        }
+        child_process.exec('curl -F file=@image.jpg -F channels=test -F token=' + config.Slack.legacy_token + ' https: //slack.com/api/files.upload', function(error, stdout, stderr) {
+            if (error) {
+                bot.reply(message, stderr);
+            }
+        });
     });
 });
 
