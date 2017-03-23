@@ -75,246 +75,250 @@ var child_process = require('child_process');
 var config = require('./config.json');
 
 var controller = Botkit.slackbot({
-  debug: true,
+    debug: true,
 });
 
 var bot = controller.spawn({
-  token: config.Slack.token
+    token: config.Slack.token
 }).startRTM();
 
 // 自分をgitからフェッチして更新
 controller.hears(['update', 'うｐだて'], 'direct_message,direct_mention', function(bot, message) {
-  bot.reply(message, 'Botのアップデートを開始します');
+    bot.reply(message, 'Botのアップデートを開始します');
 
-  child_process.exec('git fetch', function(error, stdout, stderr) {
-    child_process.exec('git log master..origin/master', function(error, stdout, stderr) {
-      if (stdout == "") {
-        bot.reply(message, 'Botは最新です');
-      } else {
-        bot.startConversation(message, function(error, convo) {
-          bot.reply(message, '更新内容は以下のとおりです');
-          bot.reply(message, '```\n' + stdout + '\n```');
-          convo.ask('アップデートを行いますか？(y/n)', [{
-              pattern: bot.utterances.yes,
-              callback: function(response, convo) {
-                updateSelf(bot, message);
-                convo.next();
-              }
-            },
-            {
-              pattern: bot.utterances.no,
-              callback: function(response, convo) {
-                bot.reply(message, 'アップデートを中止します');
-                convo.next();
-              }
-            },
-            {
-              pattern: 'はい',
-              callback: function(response, convo) {
-                updateSelf(bot, message);
-                convo.next();
-              }
-            },
-            {
-              default: true,
-              callback: function(response, convo) {
-                convo.repeat();
-                convo.next();
-              }
+    child_process.exec('git fetch', function(error, stdout, stderr) {
+        child_process.exec('git log master..origin/master', function(error, stdout, stderr) {
+            if (stdout == "") {
+                bot.reply(message, 'Botは最新です');
+            } else {
+                bot.startConversation(message, function(error, convo) {
+                    bot.reply(message, '更新内容は以下のとおりです');
+                    bot.reply(message, '```\n' + stdout + '\n```');
+                    convo.ask('アップデートを行いますか？(y/n)', [{
+                            pattern: bot.utterances.yes,
+                            callback: function(response, convo) {
+                                updateSelf(bot, message);
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: bot.utterances.no,
+                            callback: function(response, convo) {
+                                bot.reply(message, 'アップデートを中止します');
+                                convo.next();
+                            }
+                        },
+                        {
+                            pattern: 'はい',
+                            callback: function(response, convo) {
+                                updateSelf(bot, message);
+                                convo.next();
+                            }
+                        },
+                        {
+                            default: true,
+                            callback: function(response, convo) {
+                                convo.repeat();
+                                convo.next();
+                            }
+                        }
+                    ]);
+                });
             }
-          ]);
         });
-      }
     });
-  });
 });
 
 // 自分を更新
 function updateSelf(bot, message) {
-  child_process.exec('git reset --hard origin/master', function(error, stdout, stderr) {
-    bot.reply(message, 'Botが更新されました！');
-    bot.reply(message, 'Botを再起動します');
-    setTimeout(function() {
-      process.exit();
-    }, 2000);
-  });
+    child_process.exec('git reset --hard origin/master', function(error, stdout, stderr) {
+        bot.reply(message, 'Botが更新されました！');
+        bot.reply(message, 'Botを再起動します');
+        setTimeout(function() {
+            process.exit();
+        }, 2000);
+    });
 }
 
 // 撮影
 controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
-  //bot.reply(message, '撮影開始');
-  child_process.exec('/home/pi/webcam.sh', function(error, stdout, stderr) {
-    if (error) {
-      bot.reply(message, stderr);
-    }
-    // bot.reply(message, '完了');
-  });
+    //bot.reply(message, '撮影開始');
+    child_process.exec('fswebcam -r 1920x1080 --no-banner /home/pi/image.jpg', function(error, stdout, stderr) {
+        if (error) {
+            bot.reply(message, stderr);
+        }
+    });
+    child_process.exec('curl -F file=@image.jpg -F channels=test -F token=' + config.Slack.legacy_token + ' https: //slack.com/api/files.upload', function(error, stdout, stderr) {
+        if (error) {
+            bot.reply(message, stderr);
+        }
+    });
 });
 
 // PiPhotoBooth
 controller.hears(['cheese', 'はいチーズ'], 'ambient', function(bot, message) {
-  // todo: PiPhotoBoothを呼び出す
+    // todo: PiPhotoBoothを呼び出す
 });
 
 controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', function(bot, message) {
 
-  bot.api.reactions.add({
-    timestamp: message.ts,
-    channel: message.channel,
-    name: 'robot_face',
-  }, function(err, res) {
-    if (err) {
-      bot.botkit.log('Failed to add emoji reaction :(', err);
-    }
-  });
+    bot.api.reactions.add({
+        timestamp: message.ts,
+        channel: message.channel,
+        name: 'robot_face',
+    }, function(err, res) {
+        if (err) {
+            bot.botkit.log('Failed to add emoji reaction :(', err);
+        }
+    });
 
 
-  controller.storage.users.get(message.user, function(err, user) {
-    if (user && user.name) {
-      bot.reply(message, 'Hello ' + user.name + '!!');
-    } else {
-      bot.reply(message, 'Hello.');
-    }
-  });
+    controller.storage.users.get(message.user, function(err, user) {
+        if (user && user.name) {
+            bot.reply(message, 'Hello ' + user.name + '!!');
+        } else {
+            bot.reply(message, 'Hello.');
+        }
+    });
 });
 
 controller.hears(['call me (.*)', 'my name is (.*)'], 'direct_message,direct_mention,mention', function(bot, message) {
-  var name = message.match[1];
-  controller.storage.users.get(message.user, function(err, user) {
-    if (!user) {
-      user = {
-        id: message.user,
-      };
-    }
-    user.name = name;
-    controller.storage.users.save(user, function(err, id) {
-      bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
+    var name = message.match[1];
+    controller.storage.users.get(message.user, function(err, user) {
+        if (!user) {
+            user = {
+                id: message.user,
+            };
+        }
+        user.name = name;
+        controller.storage.users.save(user, function(err, id) {
+            bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
+        });
     });
-  });
 });
 
 controller.hears(['what is my name', 'who am i'], 'direct_message,direct_mention,mention', function(bot, message) {
 
-  controller.storage.users.get(message.user, function(err, user) {
-    if (user && user.name) {
-      bot.reply(message, 'Your name is ' + user.name);
-    } else {
-      bot.startConversation(message, function(err, convo) {
-        if (!err) {
-          convo.say('I do not know your name yet!');
-          convo.ask('What should I call you?', function(response, convo) {
-            convo.ask('You want me to call you `' + response.text + '`?', [{
-                pattern: 'yes',
-                callback: function(response, convo) {
-                  // since no further messages are queued after this,
-                  // the conversation will end naturally with status == 'completed'
-                  convo.next();
+    controller.storage.users.get(message.user, function(err, user) {
+        if (user && user.name) {
+            bot.reply(message, 'Your name is ' + user.name);
+        } else {
+            bot.startConversation(message, function(err, convo) {
+                if (!err) {
+                    convo.say('I do not know your name yet!');
+                    convo.ask('What should I call you?', function(response, convo) {
+                        convo.ask('You want me to call you `' + response.text + '`?', [{
+                                pattern: 'yes',
+                                callback: function(response, convo) {
+                                    // since no further messages are queued after this,
+                                    // the conversation will end naturally with status == 'completed'
+                                    convo.next();
+                                }
+                            },
+                            {
+                                pattern: 'no',
+                                callback: function(response, convo) {
+                                    // stop the conversation. this will cause it to end with status == 'stopped'
+                                    convo.stop();
+                                }
+                            },
+                            {
+                                default: true,
+                                callback: function(response, convo) {
+                                    convo.repeat();
+                                    convo.next();
+                                }
+                            }
+                        ]);
+
+                        convo.next();
+
+                    }, { 'key': 'nickname' }); // store the results in a field called nickname
+
+                    convo.on('end', function(convo) {
+                        if (convo.status == 'completed') {
+                            bot.reply(message, 'OK! I will update my dossier...');
+
+                            controller.storage.users.get(message.user, function(err, user) {
+                                if (!user) {
+                                    user = {
+                                        id: message.user,
+                                    };
+                                }
+                                user.name = convo.extractResponse('nickname');
+                                controller.storage.users.save(user, function(err, id) {
+                                    bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
+                                });
+                            });
+
+
+
+                        } else {
+                            // this happens if the conversation ended prematurely for some reason
+                            bot.reply(message, 'OK, nevermind!');
+                        }
+                    });
                 }
-              },
-              {
-                pattern: 'no',
-                callback: function(response, convo) {
-                  // stop the conversation. this will cause it to end with status == 'stopped'
-                  convo.stop();
-                }
-              },
-              {
-                default: true,
-                callback: function(response, convo) {
-                  convo.repeat();
-                  convo.next();
-                }
-              }
-            ]);
-
-            convo.next();
-
-          }, { 'key': 'nickname' }); // store the results in a field called nickname
-
-          convo.on('end', function(convo) {
-            if (convo.status == 'completed') {
-              bot.reply(message, 'OK! I will update my dossier...');
-
-              controller.storage.users.get(message.user, function(err, user) {
-                if (!user) {
-                  user = {
-                    id: message.user,
-                  };
-                }
-                user.name = convo.extractResponse('nickname');
-                controller.storage.users.save(user, function(err, id) {
-                  bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
-                });
-              });
-
-
-
-            } else {
-              // this happens if the conversation ended prematurely for some reason
-              bot.reply(message, 'OK, nevermind!');
-            }
-          });
+            });
         }
-      });
-    }
-  });
+    });
 });
 
 
 controller.hears(['shutdown'], 'direct_message,direct_mention,mention', function(bot, message) {
 
-  bot.startConversation(message, function(err, convo) {
+    bot.startConversation(message, function(err, convo) {
 
-    convo.ask('Are you sure you want me to shutdown?', [{
-        pattern: bot.utterances.yes,
-        callback: function(response, convo) {
-          convo.say('Bye!');
-          convo.next();
-          setTimeout(function() {
-            process.exit();
-          }, 3000);
-        }
-      },
-      {
-        pattern: bot.utterances.no,
-        default: true,
-        callback: function(response, convo) {
-          convo.say('*Phew!*');
-          convo.next();
-        }
-      }
-    ]);
-  });
+        convo.ask('Are you sure you want me to shutdown?', [{
+                pattern: bot.utterances.yes,
+                callback: function(response, convo) {
+                    convo.say('Bye!');
+                    convo.next();
+                    setTimeout(function() {
+                        process.exit();
+                    }, 3000);
+                }
+            },
+            {
+                pattern: bot.utterances.no,
+                default: true,
+                callback: function(response, convo) {
+                    convo.say('*Phew!*');
+                    convo.next();
+                }
+            }
+        ]);
+    });
 });
 
 
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
-  'direct_message,direct_mention,mention',
-  function(bot, message) {
+    'direct_message,direct_mention,mention',
+    function(bot, message) {
 
-    var hostname = os.hostname();
-    var uptime = formatUptime(process.uptime());
+        var hostname = os.hostname();
+        var uptime = formatUptime(process.uptime());
 
-    bot.reply(message,
-      ':robot_face: I am a bot named <@' + bot.identity.name +
-      '>. I have been running for ' + uptime + ' on ' + hostname + '.');
+        bot.reply(message,
+            ':robot_face: I am a bot named <@' + bot.identity.name +
+            '>. I have been running for ' + uptime + ' on ' + hostname + '.');
 
-  });
+    });
 
 function formatUptime(uptime) {
-  var unit = 'second';
-  if (uptime > 60) {
-    uptime = uptime / 60;
-    unit = 'minute';
-  }
-  if (uptime > 60) {
-    uptime = uptime / 60;
-    unit = 'hour';
-  }
-  if (uptime != 1) {
-    unit = unit + 's';
-  }
+    var unit = 'second';
+    if (uptime > 60) {
+        uptime = uptime / 60;
+        unit = 'minute';
+    }
+    if (uptime > 60) {
+        uptime = uptime / 60;
+        unit = 'hour';
+    }
+    if (uptime != 1) {
+        unit = unit + 's';
+    }
 
-  uptime = uptime + ' ' + unit;
-  return uptime;
+    uptime = uptime + ' ' + unit;
+    return uptime;
 }

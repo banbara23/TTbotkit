@@ -1,5 +1,6 @@
 {
   "Slack": {
-    "token": "xxx"
+    "bot_token": "xxx",
+    "legacy_token": "xxx"
   }
 }
