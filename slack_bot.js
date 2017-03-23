@@ -143,7 +143,7 @@ function updateSelf(bot, message) {
 // 撮影
 controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
     // bot.reply(message, '撮影開始');
-    child_process.exec('/home/pi/webcam.sh', function(error, stdout, stderr) {
+    child_process.exec('/home/pi/webcamSlack.sh', function(error, stdout, stderr) {
         if (error) {
             bot.reply('fswebcamエラー');
             bot.reply(message, stderr);
