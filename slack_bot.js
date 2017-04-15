@@ -142,7 +142,7 @@ function updateSelf(bot, message) {
 }
 
 // 撮影
-controller.hears(['webcam'], 'ambient', function(bot, message) {
+controller.hears(['撮影', 'webcam'], 'ambient', function(bot, message) {
     // bot.reply(message, '撮影開始');
     child_process.exec('/home/pi/webcamSlack.sh', function(error, stdout, stderr) {
         if (error) {
@@ -153,11 +153,11 @@ controller.hears(['webcam'], 'ambient', function(bot, message) {
 });
 
 // shelljs
-controller.hears(['撮影'], 'ambient', function(bot, message) {
-    // todo: PiPhotoBoothを呼び出す
-    shell.exec('fswebcam -D 2 -r 1280x720 --no-banner /home/pi/image.jpg');
-    shell.exec('curl -F file=@/home/pi/image.jpg -F channels=test -F ' + config.legacy_token + ' https://slack.com/api/files.upload');
-});
+// controller.hears(['撮影'], 'ambient', function(bot, message) {
+//     // todo: PiPhotoBoothを呼び出す
+//     shell.exec('fswebcam -D 2 -r 1280x720 --no-banner /home/pi/image.jpg');
+//     shell.exec('curl -F file=@/home/pi/image.jpg -F channels=test -F ' + config.legacy_token + ' https://slack.com/api/files.upload');
+// });
 
 // PiPhotoBooth
 controller.hears(['cheese', 'はいチーズ'], 'ambient', function(bot, message) {
